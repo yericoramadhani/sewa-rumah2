@@ -14,7 +14,10 @@ return new class extends Migration
         Schema::create('lapangan', function (Blueprint $table) {
             $table->id();
             $table->string('rumah');
-            $table->string('ukuran');
+            $table->integer('panjang');
+            $table->integer('lebar');
+            $table->integer('tinggi');
+            $table->enum('garasi', ['ada', 'tidak ada']);
             $table->enum('type', ['rumah']);
             $table->integer('harga');
             $table->enum('status', ['tersedia', 'tidak tersedia']);
