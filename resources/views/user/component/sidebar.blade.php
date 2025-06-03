@@ -45,7 +45,7 @@
             </g>
           </svg>
         </span>
-        <span class="app-brand-text demo menu-text fw-bold ms-2">Booking</span>
+        <span class="app-brand-text demo menu-text fw-bold ms-2">Sewa Rumah</span>
       </a>
 
       <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto d-block d-xl-none">
@@ -69,7 +69,7 @@
       <li class="menu-item  @active('transaksi_user')">
         <a href="{{ route('transaksi_user') }}" class="menu-link">
           <i class="menu-icon tf-icons bx bx-book-heart"></i>
-          <div data-i18n="Layouts">rumah</div>
+          <div data-i18n="Layouts">prediksi rumah</div>
         </a>
       </li>
       {{-- <li class="menu-item  @active('ulasan_user')">

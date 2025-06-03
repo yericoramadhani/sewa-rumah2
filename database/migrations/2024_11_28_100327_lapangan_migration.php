@@ -18,7 +18,7 @@ return new class extends Migration
             $table->integer('luas_bangunan');
             $table->integer('jumlah_kamar');
             $table->integer('jumlah_kamar_mandi');
-            $table->integer('jumlah_lantai');
+            $table->integer('jumlah_lantai')->nullable();
             $table->enum('garasi', ['ada', 'tidak ada']);
             $table->enum('type', ['rumah']);
             $table->integer('harga');

@@ -26,7 +26,7 @@ class userController extends Controller
         $jadwal = jadwalModel::with('lapangan')->where('status', 'tersedia')->get();
         $user = User::find(Auth::user()->id);
         return view('user.pages.booking.booking', [
-            'title' => 'Booking',
+            'title' => 'Prediksi Harga',
             'user' => $user,
             'jadwal' => $jadwal,
             'lapangan' => $lapangan,
