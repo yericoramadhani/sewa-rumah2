@@ -1,278 +1,239 @@
 @extends('user.layout.header')
 @section('content')
 <div class="container-xxl flex-grow-1 container-p-y">
-    <div class="card px-4 py-2 tab-pane" id="navs-pills-top-aktif" role="tabpanel">
-        <div class="mb-2 d-flex w-full gap-2 justify-content-end">
-            <button id="resetButton" class="btn btn-danger">Reset</button>
-            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#carijadwal">Cari rumah yang anda inginkan</button>
+    
+    <div class="mb-3 d-flex align-items-center gap-3">
+        <div class="col-md-6">
+            <input type="text" id="searchInput" class="form-control" placeholder="Cari rumah berdasarkan nama, type, atau deskripsi...">
         </div>
-
-        <table id="selectedTable" class="datatables-basic table border-top mb-2">
-            <thead>
-                <tr>
-                    <th>id</th>
-                    <th>rumah</th>
-                    <th>jam pembelian di mulai</th>
-                    <th>Jam pembelian selesai</th>
-                    <th>Harga</th>
-                    <th>Aksi</th>
-                </tr>
-            </thead>
-            <tbody></tbody>
-        </table>
-
-        <form id="payment-form" action="{{ route('process-payment') }}" method="POST">
-            @csrf
-            <input type="text" id="selectedData" name="selectedData" hidden/>
-            
-            <label for="defaultFormControlInput" class="form-label">Tanggal</label>
-            <input type="date" class="form-control mb-2" name="tanggal" id="tanggals" required />
-            
-            <label for="defaultFormControlInput" class="form-label">Total Harga</label>
-            <input type="text" class="form-control mb-2" value="0" name="total_harga" id="total_harga" readonly />
-
-            <button type="submit" class="btn btn-primary my-3" id="pay-button" style="display: inline-block; width: auto; max-width: fit-content;">
-                Bayar Sekarang
-            </button>
-        </form>
-
-        <!-- Modal Cari Jadwal -->
-        <div class="modal fade" id="carijadwal" aria-hidden="true" aria-labelledby="modalToggleLabel2" tabindex="-1">
-            <div class="modal-dialog modal-lg modal-dialog-centered">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="modalToggleLabel2">Data Jadwal</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <div class="d-flex justify-content-between align-items-center ">
+            {{-- <h3 class="mb-0">Pencarian Rumah</h3> --}}
+            <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#filterModal"><i class="fa fa-filter me-1"></i>Filter</button>
+        </div>
+    </div>
+    <div class="row" id="cardContainer">
+        @foreach($lapangan as $item)
+        <div class="col-md-4 mb-4 card-item"
+            data-nama="{{ strtolower($item->rumah) }}"
+            data-type="{{ strtolower($item->type) }}"
+            data-harga="{{ $item->harga }}"
+            data-lt="{{ $item->luas_tanah }}"
+            data-lb="{{ $item->luas_bangunan }}"
+            data-kt="{{ $item->jumlah_kamar }}"
+            data-km="{{ $item->jumlah_kamar_mandi }}"
+        >
+            <div class="card h-100 shadow-sm border-0 position-relative">
+                @if($item->gambar)
+                <img src="{{ asset($item->gambar) }}" class="card-img-top" alt="{{ $item->rumah }}" style="height:220px;object-fit:cover;border-radius:12px 12px 0 0;">
+                @else
+                <div class="bg-secondary d-flex align-items-center justify-content-center" style="height:220px;color:white;border-radius:12px 12px 0 0;">Tidak ada gambar</div>
+                @endif
+                <div class="card-body pt-3">
+                    <div class="mb-1" style="font-size:1.2rem;font-weight:700;color:#6f42c1;">{{ $item->rumah }}</div>
+                    <div class="mb-2" style="font-size:1.5rem;font-weight:800;color:#6f42c1;">Rp {{ number_format($item->harga,0,',','.') }}</div>
+                    <div class="mb-1" style="font-size:15px;font-weight:500;">{{ $item->deskripsi ?? '-' }}</div>
+                    <div class="mb-2 text-secondary" style="font-size:13px;">
+                        LT {{ $item->luas_tanah ?? '-' }} m² &nbsp; - &nbsp; LB {{ $item->luas_bangunan ?? '-' }} m² &nbsp; - &nbsp; KM {{ $item->jumlah_kamar_mandi ?? '-' }} &nbsp; - &nbsp; KT {{ $item->jumlah_kamar ?? '-' }}
                     </div>
-                    <div class="modal-body">
-                        <table id="modalTable" class="datatables-basic table border-top">
-                            <thead>
-                                <tr>
-                                    <th>id_rumah</th>
-                                    <th>rumah yang di beli</th>
-                                    <th>Jam pembelian di mulai</th>
-                                    <th>Jam pembelian Selesai</th>
-                                    <th>Harga</th>
-                                    <th>Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @if($jadwal->isEmpty())
-                                    <tr>
-                                        <td colspan="6" style="color: red; font-weight: bold;" class="text-center">Jadwal lagi penuh</td>
-                                    </tr>
-                                @else
-                                    @foreach ($jadwal as $item)
-                                        <tr>
-                                            <td>{{ $item->id }}</td>
-                                            <td>{{ $item->rumah }}</td>
-                                            <td>{{ $item->jam_mulai_beli }}</td>
-                                            <td>{{ $item->jam_selesai_beli }}</td>
-                                            <td>{{ $item->rumah}}</td>
-                                            <td><button class="btn btn-warning pilihJadwal" data-bs-dismiss="modal">Pilih rumah</button></td>
-                                        </tr>
-                                    @endforeach
-                                @endif
-                            </tbody>
-                        </table>
+                    <div class="mb-1">
+                        <span class="badge {{ $item->status == 'tersedia' ? 'bg-success' : 'bg-danger' }} me-1" style="font-size:13px;">Status: {{ ucfirst($item->status) }}</span>
+                        <span class="badge {{ $item->garasi == 'ada' ? 'bg-success' : 'bg-danger' }}" style="font-size:13px;">Garasi: {{ ucfirst($item->garasi) }}</span>
                     </div>
                 </div>
             </div>
         </div>
+        @endforeach
     </div>
+    <div id="noResult" class="text-center text-danger fw-bold" style="display:none;">Tidak ada rumah yang sesuai...</div>
 </div>
 
-<script src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="SB-Mid-client-PeBVgmyPHeH5FWiH"></script>
+<!-- Modal Filter -->
+<div class="modal fade" id="filterModal" tabindex="-1" aria-labelledby="filterModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-end modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="filterModalLabel">Filter</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label class="form-label">Urutkan</label><br>
+          <div class="btn-group" role="group">
+            <button type="button" class="btn btn-outline-secondary sort-btn" data-sort="harga-desc">Harga Tertinggi</button>
+            <button type="button" class="btn btn-outline-secondary sort-btn" data-sort="harga-asc">Harga Terendah</button>
+          </div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Harga</label>
+          <div class="row g-2 align-items-center">
+            <div class="col">
+              <input type="text" class="form-control format-rupiah" id="hargaMin" placeholder="Rp Minimum">
+            </div>
+            <div class="col-auto">-</div>
+            <div class="col">
+              <input type="text" class="form-control format-rupiah" id="hargaMax" placeholder="Rp Maksimum">
+            </div>
+          </div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Luas Tanah</label>
+          <div class="row g-2 align-items-center">
+            <div class="col">
+              <input type="number" class="form-control" id="ltMin" placeholder="Minimum m²">
+            </div>
+            <div class="col-auto">-</div>
+            <div class="col">
+              <input type="number" class="form-control" id="ltMax" placeholder="Maksimum m²">
+            </div>
+          </div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Luas Bangunan</label>
+          <div class="row g-2 align-items-center">
+            <div class="col">
+              <input type="number" class="form-control" id="lbMin" placeholder="Minimum m²">
+            </div>
+            <div class="col-auto">-</div>
+            <div class="col">
+              <input type="number" class="form-control" id="lbMax" placeholder="Maksimum m²">
+            </div>
+          </div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Kamar Tidur</label><br>
+          <div class="btn-group" role="group" id="ktGroup">
+            <button type="button" class="btn btn-outline-secondary kt-btn" data-kt="1">1+</button>
+            <button type="button" class="btn btn-outline-secondary kt-btn" data-kt="2">2+</button>
+            <button type="button" class="btn btn-outline-secondary kt-btn" data-kt="3">3+</button>
+            <button type="button" class="btn btn-outline-secondary kt-btn" data-kt="4">4+</button>
+          </div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Kamar Mandi</label><br>
+          <div class="btn-group" role="group" id="kmGroup">
+            <button type="button" class="btn btn-outline-secondary km-btn" data-km="1">1+</button>
+            <button type="button" class="btn btn-outline-secondary km-btn" data-km="2">2+</button>
+            <button type="button" class="btn btn-outline-secondary km-btn" data-km="3">3+</button>
+            <button type="button" class="btn btn-outline-secondary km-btn" data-km="4">4+</button>
+          </div>
+        </div>
+        {{-- <div class="mb-3">
+          <label class="form-label">Jumlah Lantai</label><br>
+          <div class="btn-group" role="group" id="lantaiGroup">
+            <button type="button" class="btn btn-outline-secondary lantai-btn" data-lantai="1">1+</button>
+            <button type="button" class="btn btn-outline-secondary lantai-btn" data-lantai="2">2+</button>
+            <button type="button" class="btn btn-outline-secondary lantai-btn" data-lantai="3">3+</button>
+            <button type="button" class="btn btn-outline-secondary lantai-btn" data-lantai="4">4+</button>
+          </div>
+        </div> --}}
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" id="applyFilter">Terapkan</button>
+      </div>
+    </div>
+  </div>
+</div>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
 <script>
-$(document).ready(function () {
-    const selectedTableBody = $("#selectedTable tbody");
-    const selectedDataInput = $("#selectedData");
-    const totalHargaInput = $("#total_harga");
-
-    // Pilih Jadwal
-    $("#modalTable").on("click", ".pilihJadwal", function () {
-        const row = $(this).closest("tr");
-        const id = row.find("td:nth-child(1)").text();
-        const namaLapangan = row.find("td:nth-child(2)").text();
-        const jamMulai = row.find("td:nth-child(3)").text();
-        const jamSelesai = row.find("td:nth-child(4)").text();
-        const harga = row.find("td:nth-child(5)").text();
-
-        // Cek duplikat
-        let isDuplicate = false;
-        selectedTableBody.find("tr").each(function () {
-            if ($(this).find("td:nth-child(1)").text() === id) {
-                isDuplicate = true;
-                return false;
-            }
-        });
-
-        if (isDuplicate) {
-            Swal.fire({
-                title: 'Peringatan',
-                text: 'Jadwal ini sudah dipilih!',
-                icon: 'warning',
-                confirmButtonText: 'Oke'
-            });
-            return;
-        }
-
-        // Tambah ke tabel
-        const newRow = `
-            <tr>
-                <td>${id}</td>
-                <td>${namaLapangan}</td>
-                <td>${jamMulai}</td>
-                <td>${jamSelesai}</td>
-                <td class="harga">${harga}</td>
-                <td><button class="btn btn-danger hapusRow">Hapus</button></td>
-            </tr>
-        `;
-        selectedTableBody.append(newRow);
-        updateHiddenInput();
-        updateTotalHarga();
-    });
-
-    // Reset Tabel
-    $("#resetButton").on("click", function () {
-        selectedTableBody.empty();
-        updateHiddenInput();
-        updateTotalHarga();
-    });
-
-    // Hapus baris
-    $("#selectedTable").on("click", ".hapusRow", function () {
-        $(this).closest("tr").remove();
-        updateHiddenInput();
-        updateTotalHarga();
-    });
-
-    // Update total harga
-    function updateTotalHarga() {
-        let total = 0;
-        selectedTableBody.find("tr").each(function () {
-            const harga = parseFloat($(this).find(".harga").text()) || 0;
-            total += harga;
-        });
-        totalHargaInput.val(total);
+// Format harga input dengan titik ribuan
+function formatRupiah(angka) {
+    let number_string = angka.replace(/[^\d]/g, ''),
+        sisa = number_string.length % 3,
+        rupiah = number_string.substr(0, sisa),
+        ribuan = number_string.substr(sisa).match(/\d{3}/g);
+    if (ribuan) {
+        let separator = sisa ? '.' : '';
+        rupiah += separator + ribuan.join('.');
     }
-
-    // Update input hidden
-    function updateHiddenInput() {
-        const data = [];
-        selectedTableBody.find("tr").each(function () {
-            const row = $(this);
-            data.push({
-                idjadwal: row.find("td:nth-child(1)").text(),
-                jamMulai: row.find("td:nth-child(3)").text(),
-                jamSelesai: row.find("td:nth-child(4)").text(),
-                harga: row.find("td:nth-child(5)").text()
-            });
-        });
-        selectedDataInput.val(JSON.stringify(data));
-    }
-
-    // Handle form submission
-    $("#payment-form").on("submit", function(e) {
-        e.preventDefault();
-        
-        if (selectedTableBody.find("tr").length === 0) {
-            Swal.fire({
-                title: 'Error',
-                text: 'Pilih minimal satu jadwal!',
-                icon: 'error',
-                confirmButtonText: 'Oke'
-            });
-            return;
-        }
-
-        // Tampilkan loading
-        Swal.fire({
-            title: 'Memproses Pembayaran',
-            text: 'Mohon tunggu sebentar...',
-            allowOutsideClick: false,
-            didOpen: () => {
-                Swal.showLoading();
-            }
-        });
-
-        // Kirim data ke server
-        $.ajax({
-            url: $(this).attr("action"),
-            method: "POST",
-            data: $(this).serialize(),
-            success: function(response) {
-                if (response.snap_token) {
-                    snap.pay(response.snap_token, {
-                        onSuccess: function(result) {
-                            window.location.href = '/payment-success';
-                        },
-                        onPending: function(result) {
-                            window.location.href = '/payment-pending';
-                        },
-                        onError: function(result) {
-                            window.location.href = '/payment-error';
-                        },
-                        onClose: function() {
-                            Swal.fire({
-                                title: 'Pembayaran Dibatalkan',
-                                text: 'Anda menutup halaman pembayaran',
-                                icon: 'info',
-                                confirmButtonText: 'Oke'
-                            });
-                        }
-                    });
-                } else {
-                    Swal.fire({
-                        title: 'Error',
-                        text: 'Terjadi kesalahan saat memproses pembayaran',
-                        icon: 'error',
-                        confirmButtonText: 'Oke'
-                    });
-                }
-            },
-            error: function(xhr) {
-                let errorMessage = 'Terjadi kesalahan saat memproses pembayaran';
-                
-                if (xhr.responseJSON && xhr.responseJSON.message) {
-                    errorMessage = xhr.responseJSON.message;
-                }
-                
-                Swal.fire({
-                    title: 'Error',
-                    text: errorMessage,
-                    icon: 'error',
-                    confirmButtonText: 'Oke'
-                });
-            }
-        });
+    return rupiah;
+}
+document.querySelectorAll('.format-rupiah').forEach(function(input) {
+    input.addEventListener('input', function(e) {
+        let value = input.value.replace(/\./g, '');
+        input.value = formatRupiah(value);
     });
 });
 
-// Set tanggal default ke hari ini
-document.addEventListener('DOMContentLoaded', function() {
-    const dateInput = document.getElementById("tanggals");
-    const today = new Date();
-    const jakartaDate = new Date(today.toLocaleString('en-US', { timeZone: 'Asia/Jakarta' }));
-    dateInput.value = jakartaDate.toISOString().split("T")[0];
+// Filter logic
+let sortType = null, ktMin = null, kmMin = null, lantaiMin = null;
+document.querySelectorAll('.sort-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        sortType = btn.getAttribute('data-sort');
+    });
 });
-</script>
+document.querySelectorAll('.kt-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        document.querySelectorAll('.kt-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        ktMin = parseInt(btn.getAttribute('data-kt'));
+    });
+});
+document.querySelectorAll('.km-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        document.querySelectorAll('.km-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        kmMin = parseInt(btn.getAttribute('data-km'));
+    });
+});
+document.querySelectorAll('.lantai-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        document.querySelectorAll('.lantai-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        lantaiMin = parseInt(btn.getAttribute('data-lantai'));
+    });
+});
 
-<script>
-    @if(Session::has('berhasil_tambah'))
-    Swal.fire({
-        title: 'Berhasil',
-        text: 'Data Berhasil ditambahkan',
-        icon: 'success',
-        confirmButtonText: 'Oke'
-    })
-    @elseif(Session::has('gagal_tambah'))
-    Swal.fire({
-        title: 'Gagal',
-        text: 'Data gagal di tambahkan',
-        icon: 'error',
-        confirmButtonText: 'Oke'
-    })
-    @endif
+function applyAllFilters() {
+    const hargaMin = parseInt(document.getElementById('hargaMin')?.value.replace(/\./g, '')) || 0;
+    const hargaMax = parseInt(document.getElementById('hargaMax')?.value.replace(/\./g, '')) || 99999999999;
+    const ltMin = parseInt(document.getElementById('ltMin')?.value) || 0;
+    const ltMax = parseInt(document.getElementById('ltMax')?.value) || 999999999;
+    const lbMin = parseInt(document.getElementById('lbMin')?.value) || 0;
+    const lbMax = parseInt(document.getElementById('lbMax')?.value) || 999999999;
+    const search = document.getElementById('searchInput').value.toLowerCase();
+    const cardItems = document.querySelectorAll('.card-item');
+    let visibleCount = 0;
+    let cards = Array.from(cardItems);
+    cards.forEach(card => {
+        const nama = card.getAttribute('data-nama');
+        const type = card.getAttribute('data-type');
+        const harga = parseInt(card.getAttribute('data-harga'));
+        const lt = parseInt(card.getAttribute('data-lt'));
+        const lb = parseInt(card.getAttribute('data-lb'));
+        const kt = parseInt(card.getAttribute('data-kt'));
+        const km = parseInt(card.getAttribute('data-km'));
+        let show = true;
+        if (search && !(nama.includes(search) || type.includes(search))) show = false;
+        if (harga < hargaMin || harga > hargaMax) show = false;
+        if (lt < ltMin || lt > ltMax) show = false;
+        if (lb < lbMin || lb > lbMax) show = false;
+        if (ktMin && kt < ktMin) show = false;
+        if (kmMin && km < kmMin) show = false;
+        card.style.display = show ? '' : 'none';
+        if (show) visibleCount++;
+    });
+    // Sorting
+    if (sortType) {
+        cards.sort((a, b) => {
+            let va = parseInt(a.getAttribute('data-harga'));
+            let vb = parseInt(b.getAttribute('data-harga'));
+            if (sortType === 'harga-desc') return vb - va;
+            if (sortType === 'harga-asc') return va - vb;
+            return 0;
+        });
+        const container = document.getElementById('cardContainer');
+        cards.forEach(card => container.appendChild(card));
+    }
+    document.getElementById('noResult').style.display = visibleCount === 0 ? '' : 'none';
+}
+
+document.getElementById('searchInput').addEventListener('input', applyAllFilters);
+document.getElementById('applyFilter').addEventListener('click', function() {
+    applyAllFilters();
+    var modal = bootstrap.Modal.getInstance(document.getElementById('filterModal'));
+    modal.hide();
+});
 </script>
 @endsection
