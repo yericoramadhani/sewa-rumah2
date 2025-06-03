@@ -11,10 +11,14 @@ class lapanganModel extends Model
     protected $fillable = [
         'rumah',
         'deskripsi',
-        'ukuran',
-        'type',
+        'luas_tanah',
+        'luas_bangunan',
+        'jumlah_kamar',
+        'jumlah_kamar_mandi',
         'harga',
         'status',
+        'type',
         'gambar',
+        'garasi',
     ];
 }

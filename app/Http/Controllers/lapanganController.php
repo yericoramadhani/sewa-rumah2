@@ -21,23 +21,22 @@ class LapanganController extends Controller
     
     public function tambah(Request $request)
     {
-       
         // Validasi input
         $request->validate([
             'nama' => 'required',
             'deskripsi' => 'required',
-            'ukuran' => 'required',
+            'luas_tanah' => 'required|integer',
+            'luas_bangunan' => 'required|integer',
+            'jumlah_kamar' => 'required|integer',
+            'jumlah_kamar_mandi' => 'required|integer',
             'harga' => 'required',
             'status' => 'required',
             'tipe' => 'required',
-            'gambar' => 'nullable|image|mimes:jpeg,png,jpg'
+            'gambar' => 'nullable|image|mimes:jpeg,png,jpg',
+            'garasi' => 'required|in:ada,tidak ada',
         ]);
 
-        
-
         $fileName = null;
-
-        // Handle upload gambar`
         if ($request->hasFile('gambar')) {
             $file = $request->file('gambar');
             $fileName = time() . '.' . $file->getClientOriginalExtension();
@@ -47,18 +46,20 @@ class LapanganController extends Controller
         $lapangan = LapanganModel::create([
             'rumah' => $request->nama,
             'deskripsi' => $request->deskripsi,
-            'ukuran' => $request->ukuran,
+            'luas_tanah' => $request->luas_tanah,
+            'luas_bangunan' => $request->luas_bangunan,
+            'jumlah_kamar' => $request->jumlah_kamar,
+            'jumlah_kamar_mandi' => $request->jumlah_kamar_mandi,
             'harga' => $request->harga,
             'status' => $request->status,
             'type' => $request->tipe,
-            'gambar' => $fileName ? 'gambar_rumah/' . $fileName : null
+            'gambar' => $fileName ? 'gambar_rumah/' . $fileName : null,
+            'garasi' => $request->garasi,
         ]);
 
         if ($lapangan) {
-            echo('berhasil');
             return redirect()->route('lapangan')->with('berhasil_tambah', true);
         } else {
-            echo('gagal');
             return redirect()->route('lapangan')->with('gagal_tambah', true);
         }
     }
@@ -79,42 +80,42 @@ class LapanganController extends Controller
 
     public function edit(Request $request, $id)
     {
-        // Validasi input edit
-        //  dd($request->all());
         $request->validate([
             'nama' => 'required',
             'deskripsi' => 'required',
-            'ukuran' => 'required',
+            'luas_tanah' => 'required|integer',
+            'luas_bangunan' => 'required|integer',
+            'jumlah_kamar' => 'required|integer',
+            'jumlah_kamar_mandi' => 'required|integer',
             'harga' => 'required',
             'status' => 'required',
-            // 'tipe' => 'required',
-            'gambar' => 'nullable|image|mimes:jpeg,png,jpg'
+            'tipe' => 'required',
+            'gambar' => 'nullable|image|mimes:jpeg,png,jpg',
+            'garasi' => 'required|in:ada,tidak ada',
         ]);
 
         $lapangan = LapanganModel::findOrFail($id);
-
         $lapangan->rumah = $request->nama;
         $lapangan->deskripsi = $request->deskripsi;
-        $lapangan->ukuran = $request->ukuran;
-        $lapangan->harga= $request->harga;
+        $lapangan->luas_tanah = $request->luas_tanah;
+        $lapangan->luas_bangunan = $request->luas_bangunan;
+        $lapangan->jumlah_kamar = $request->jumlah_kamar;
+        $lapangan->jumlah_kamar_mandi = $request->jumlah_kamar_mandi;
+        $lapangan->harga = $request->harga;
         $lapangan->status = $request->status;
         $lapangan->type = $request->tipe;
+        $lapangan->garasi = $request->garasi;
 
-        // Update gambar jika ada upload baru
         if ($request->hasFile('gambar')) {
             if ($lapangan->gambar && file_exists(public_path($lapangan->gambar))) {
                 unlink(public_path($lapangan->gambar));
             }
-
             $file = $request->file('gambar');
             $fileName = time() . '.' . $file->getClientOriginalExtension();
             $file->move(public_path('gambar_rumah'), $fileName);
-
             $lapangan->gambar = 'gambar_rumah/' . $fileName;
         }
-
         $lapangan->save();
-
         return redirect()->route('lapangan')->with('berhasil_edit', true);
     }
 }
