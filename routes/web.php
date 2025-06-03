@@ -38,7 +38,7 @@ Route::prefix('admin')->group(function () {
         Route::put('/{id}/edit', [galleryController::class, 'edit'])->name('edit_gallery');
         Route::delete('/{id}/delete', [galleryController::class, 'delete'])->name('delete_gallery');
     });
-    Route::prefix('lapangan')->group(function () {
+    Route::prefix('rumah')->group(function () {
         Route::get('/', [LapanganController::class, 'show_lapangan'])->name('lapangan');
         Route::post('/tambah', [lapanganController::class, 'tambah'])->name('tambah_lapangan');
         Route::put('/{id}/edit', [lapanganController::class, 'edit'])->name('edit_lapangan');
@@ -51,7 +51,7 @@ Route::prefix('admin')->group(function () {
         Route::delete('/{id}/delete', [jadwalController::class, 'hapus'])->name('delete_jadwal');
     });
 
-    Route::prefix('transaksi')->group(function () {
+    Route::prefix('prediksi')->group(function () {
         Route::get('/', [adminController::class, 'show_transaksi'])->name('transaksi');
         Route::post('/tambah', [transaksiController::class, 'tambah'])->name('tambah_transaksi');
         Route::put('/{id}/edit', [transaksiController::class, 'edit'])->name('edit_transaksi');
